@@ -160,8 +160,6 @@ func (binding *linkedBinding) getKey() Key {
 	return binding.key
 }
 
-// ------------------------------------------------------------
-
 func newConstructorBinding(key Key, scope Scope, constructor interface{}) binding {
 	return &constructorBinding{
 		key:         key,
@@ -192,6 +190,39 @@ func (binding *constructorBinding) getKey() Key {
 func (binding *constructorBinding) fill(injector Injector) filledBinding {
 	return resolveBindingScope(binding.scope, func() (interface{}, error) {
 		return buildByConstructor(injector, binding.constructor)
+	})
+}
+
+func newInstanceBinding(key Key, scope Scope, instance interface{}) binding {
+	return &instanceBinding{
+		key:         key,
+		scope:       scope,
+		instance: instance,
+	}
+}
+
+type instanceBinding struct {
+	key         Key
+	scope       Scope
+	instance interface{}
+}
+
+func (binding *instanceBinding) getScope() Scope {
+	return binding.scope
+}
+
+func (binding *instanceBinding) withScope(scope Scope) binding {
+	binding.scope = scope
+	return binding
+}
+
+func (binding *instanceBinding) getKey() Key {
+	return binding.key
+}
+
+func (binding *instanceBinding) fill(injector Injector) filledBinding {
+	return resolveBindingScope(binding.scope, func() (interface{}, error) {
+		return binding.instance, nil
 	})
 }
 
