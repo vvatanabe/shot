@@ -16,7 +16,7 @@ func newBinder() Binder {
 }
 
 type binder struct {
-	mux *sync.Mutex
+	mux      *sync.Mutex
 	bindings []binding
 }
 

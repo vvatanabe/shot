@@ -9,7 +9,6 @@ type Key interface {
 	ReflectType() reflect.Type
 }
 
-
 type key struct {
 	reflectType reflect.Type
 }

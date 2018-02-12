@@ -25,8 +25,8 @@ func (u *ProjectService) FindGroup() []string {
 
 func NewStoreOnMemory() *StoreOnMemory {
 	return &StoreOnMemory{
-		[]string{ "user-1", "user-2", "user-3" },
-		[]string{ "group-1", "group-2", "group-3" },
+		[]string{"user-1", "user-2", "user-3"},
+		[]string{"group-1", "group-2", "group-3"},
 	}
 }
 
@@ -36,7 +36,7 @@ type Store interface {
 }
 
 type StoreOnMemory struct {
-	users []string
+	users  []string
 	groups []string
 }
 
@@ -63,7 +63,7 @@ func NewUserRepositoryOnMemory(store Store) *UserRepositoryOnMemory {
 }
 
 type UserRepositoryOnMemory struct {
-	Store Store  `inject:""`
+	Store Store `inject:""`
 }
 
 func (repository *UserRepositoryOnMemory) FindAll() []string {
@@ -79,7 +79,7 @@ func NewGroupRepositoryOnMemory(store Store) *GroupRepositoryOnMemory {
 }
 
 type GroupRepositoryOnMemory struct {
-	Store Store  `inject:""`
+	Store Store `inject:""`
 }
 
 func (repository *GroupRepositoryOnMemory) FindAll() []string {
@@ -160,7 +160,6 @@ func Test_it_should_be_inject_implementation_into_the_interface_as_eager_singlet
 		t.Fatal("could not inject field of GroupRepository")
 	}
 }
-
 
 // ------------------------------
 

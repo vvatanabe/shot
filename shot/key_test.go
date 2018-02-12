@@ -21,7 +21,6 @@ func Test_Key(t *testing.T) {
 	key1 := NewKey(new(User))
 	key2 := NewKey(new(User))
 
-
 	bindings[key1] = &user{"john"}
 
 	if bindings[key1] != bindings[key2] {

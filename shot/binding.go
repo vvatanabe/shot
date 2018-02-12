@@ -1,10 +1,10 @@
 package shot
 
 import (
-	"reflect"
-	"sync"
 	"errors"
 	"fmt"
+	"reflect"
+	"sync"
 )
 
 func newSingletonValue(initialize initialize) *singleton {
@@ -195,15 +195,15 @@ func (binding *constructorBinding) fill(injector Injector) filledBinding {
 
 func newInstanceBinding(key Key, scope Scope, instance interface{}) binding {
 	return &instanceBinding{
-		key:         key,
-		scope:       scope,
+		key:      key,
+		scope:    scope,
 		instance: instance,
 	}
 }
 
 type instanceBinding struct {
-	key         Key
-	scope       Scope
+	key      Key
+	scope    Scope
 	instance interface{}
 }
 
@@ -274,7 +274,7 @@ func fillStructure(injector Injector, structureValue reflect.Value) (interface{}
 	return structureValue.Addr().Interface(), nil
 }
 
-func buildByConstructor(injector Injector, constructorFunc interface{}) (interface{}, error){
+func buildByConstructor(injector Injector, constructorFunc interface{}) (interface{}, error) {
 
 	constructor := reflect.ValueOf(constructorFunc)
 	constructorType := reflect.TypeOf(constructorFunc)

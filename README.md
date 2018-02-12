@@ -26,9 +26,10 @@ import (
 
 func main() {
 	injector, err := shot.CreateInjector(func(binder shot.Binder) {
-		binder.Bind(new(Store)).ToConstructor(NewStoreOnMemory)
+		store := NewStoreOnMemory()
+		binder.Bind(new(Store)).ToInstance(store)
+		binder.Bind(new(GroupRepository)).ToConstructor(NewGroupRepositoryOnMemory)
 		binder.Bind(new(UserRepository)).To(new(UserRepositoryOnMemory)).In(shot.SingletonInstance)
-		binder.Bind(new(GroupRepository)).To(new(GroupRepositoryOnMemory)).In(shot.SingletonInstance)
 		binder.Bind(new(ProjectService)).AsEagerSingleton()
 	})
 
@@ -40,39 +41,112 @@ func main() {
 	groupRepository := injector.Get(new(GroupRepository)).(GroupRepository)
 	projectService := injector.Get(new(ProjectService)).(*ProjectService)
 }
+
+func NewProjectService(userRepository UserRepository, groupRepository GroupRepository) *ProjectService {
+	return &ProjectService{
+		userRepository, groupRepository,
+	}
+}
+
+type ProjectService struct {
+	UserRepository  UserRepository  "inject"
+	GroupRepository GroupRepository "inject"
+}
+
+func (u *ProjectService) FindUser() []string {
+	return u.UserRepository.FindAll()
+}
+
+func (u *ProjectService) FindGroup() []string {
+	return u.GroupRepository.FindAll()
+}
+
+func NewStoreOnMemory() *StoreOnMemory {
+	return &StoreOnMemory{
+		[]string{"user-1", "user-2", "user-3"},
+		[]string{"group-1", "group-2", "group-3"},
+	}
+}
+
+type Store interface {
+	GetUsers() []string
+	GetGroups() []string
+}
+
+type StoreOnMemory struct {
+	users  []string
+	groups []string
+}
+
+func (s *StoreOnMemory) GetUsers() []string {
+	return s.users
+}
+
+func (s *StoreOnMemory) GetGroups() []string {
+	return s.groups
+}
+
+type UserRepository interface {
+	FindAll() []string
+}
+
+func NewUserRepositoryOnMemory(store Store) *UserRepositoryOnMemory {
+	return &UserRepositoryOnMemory{store}
+}
+
+type UserRepositoryOnMemory struct {
+	Store Store "inject"
+}
+
+func (repository *UserRepositoryOnMemory) FindAll() []string {
+	return repository.Store.GetUsers()
+}
+
+type GroupRepository interface {
+	FindAll() []string
+}
+
+func NewGroupRepositoryOnMemory(store Store) *GroupRepositoryOnMemory {
+	return &GroupRepositoryOnMemory{store}
+}
+
+type GroupRepositoryOnMemory struct {
+	Store Store "inject"
+}
+
+func (repository *GroupRepositoryOnMemory) FindAll() []string {
+	return repository.Store.GetGroups()
+}
 ```
 
 ### To inject implementation into the interface via struct.
 ``` go
 binder.Bind(new(UserRepository)).To(new(UserRepositoryOnMemory))
-
-// as singleton
-binder.Bind(new(UserRepository)).To(new(UserRepositoryOnMemory)).In(SingletonInstance)
-
-// as eager singleton
-binder.Bind(new(UserRepository)).To(new(UserRepositoryOnMemory)).AsEagerSingleton()
 ```
 
 ### To inject implementation into the interface via constructor.
 ``` go
 binder.Bind(new(UserRepository)).ToConstructor(NewUserRepositoryOnMemory)
-
-// as singleton
-binder.Bind(new(UserRepository)).ToConstructor(NewUserRepositoryOnMemory).In(SingletonInstance)
-
-// as eager singleton
-binder.Bind(new(UserRepository)).ToConstructor(NewUserRepositoryOnMemory).AsEagerSingleton()
 ```
 
-### To inject struct into the struct directly.
+### To inject instance into the struct directly.
 ``` go
-binder.Bind(new(ProjectService)).In(NoScope)
+binder.Bind(new(ProjectService)).ToInstance(store)
+```
 
-// as singleton
-binder.Bind(new(ProjectService)).In(SingletonInstance)
+### To inject implementation into the struct directly.
+``` go
+binder.Bind(new(ProjectService)).In(shot.NoScope)
+```
 
-// as eager singleton
-binder.Bind(new(ProjectService)).AsEagerSingleton()
+### The singleton binding
+``` go
+binder.Bind(new(UserRepository)).To(new(UserRepositoryOnMemory)).In(shot.SingletonInstance)
+```
+
+### The eager singleton binding
+``` go
+binder.Bind(new(UserRepository)).To(new(UserRepositoryOnMemory)).AsEagerSingleton()
 ```
 
 ## Acknowledgments

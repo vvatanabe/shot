@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/vvatanabe/shot/shot"
 	"fmt"
+	"github.com/vvatanabe/shot/shot"
 )
 
 func main() {
@@ -17,9 +17,10 @@ func main() {
 func NewContainer() Container {
 
 	injector, err := shot.CreateInjector(func(binder shot.Binder) {
-		binder.Bind(new(Store)).ToConstructor(NewStoreOnMemory)
+		store := NewStoreOnMemory()
+		binder.Bind(new(Store)).ToInstance(store)
 		binder.Bind(new(UserRepository)).To(new(UserRepositoryOnMemory)).In(shot.SingletonInstance)
-		binder.Bind(new(GroupRepository)).To(new(GroupRepositoryOnMemory)).In(shot.SingletonInstance)
+		binder.Bind(new(GroupRepository)).ToConstructor(NewGroupRepositoryOnMemory).In(shot.SingletonInstance)
 		binder.Bind(new(ProjectService)).AsEagerSingleton()
 	})
 
@@ -57,9 +58,6 @@ func (c *container) ProjectService() *ProjectService {
 	return c.Get(new(ProjectService)).(*ProjectService)
 }
 
-
-
-
 func NewProjectService(userRepository UserRepository, groupRepository GroupRepository) *ProjectService {
 	return &ProjectService{
 		userRepository, groupRepository,
@@ -81,8 +79,8 @@ func (u *ProjectService) FindGroup() []string {
 
 func NewStoreOnMemory() *StoreOnMemory {
 	return &StoreOnMemory{
-		[]string{ "user-1", "user-2", "user-3" },
-		[]string{ "group-1", "group-2", "group-3" },
+		[]string{"user-1", "user-2", "user-3"},
+		[]string{"group-1", "group-2", "group-3"},
 	}
 }
 
@@ -92,7 +90,7 @@ type Store interface {
 }
 
 type StoreOnMemory struct {
-	users []string
+	users  []string
 	groups []string
 }
 
@@ -119,7 +117,7 @@ func NewUserRepositoryOnMemory(store Store) *UserRepositoryOnMemory {
 }
 
 type UserRepositoryOnMemory struct {
-	Store Store  `inject:""`
+	Store Store `inject:""`
 }
 
 func (repository *UserRepositoryOnMemory) FindAll() []string {
@@ -135,7 +133,7 @@ func NewGroupRepositoryOnMemory(store Store) *GroupRepositoryOnMemory {
 }
 
 type GroupRepositoryOnMemory struct {
-	Store Store  `inject:""`
+	Store Store `inject:""`
 }
 
 func (repository *GroupRepositoryOnMemory) FindAll() []string {
