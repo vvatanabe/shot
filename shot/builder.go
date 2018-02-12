@@ -3,6 +3,7 @@ package shot
 type BindingBuilder interface {
 	To(implementation interface{}) BindingBuilder
 	ToConstructor(constructor interface{}) BindingBuilder
+	ToInstance(instance interface{}) BindingBuilder
 	In(scope Scope)
 	AsEagerSingleton()
 }
@@ -30,6 +31,12 @@ func (builder *linkedBindingBuilder) To(implementation interface{}) BindingBuild
 func (builder *linkedBindingBuilder) ToConstructor(constructor interface{}) BindingBuilder {
 	base := builder.getBinding()
 	builder.setBinding(newConstructorBinding(base.getKey(), base.getScope(), constructor))
+	return builder
+}
+
+func (builder *linkedBindingBuilder) ToInstance(instance interface{}) BindingBuilder {
+	base := builder.getBinding()
+	builder.setBinding(newInstanceBinding(base.getKey(), base.getScope(), instance))
 	return builder
 }
 
