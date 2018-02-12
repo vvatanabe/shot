@@ -453,14 +453,51 @@ func Test_it_should_be_inject_struct_into_the_struct_as_eager_singleton_via_cons
 	}
 }
 
-// ---
-
 func Test_it_should_be_inject_struct_into_the_struct_directly(t *testing.T) {
 	injector, err := CreateInjector(func(binder Binder) {
 		binder.Bind(new(ProjectService)).In(NoScope)
 		binder.Bind(new(Store)).ToConstructor(NewStoreOnMemory)
 		binder.Bind(new(UserRepository)).ToConstructor(NewUserRepositoryOnMemory)
 		binder.Bind(new(GroupRepository)).ToConstructor(NewGroupRepositoryOnMemory)
+	})
+	if err != nil {
+		t.Fatalf("fatal: %v", err)
+	}
+	userRepository := injector.Get(new(UserRepository)).(UserRepository)
+	if userRepository == nil {
+		t.Fatal("not found a UserRepository")
+	}
+	if userRepository.FindAll() == nil {
+		t.Fatal("could not inject field of UserRepository")
+	}
+	groupRepository := injector.Get(new(GroupRepository)).(GroupRepository)
+	if groupRepository == nil {
+		t.Fatal("not found a GroupRepository")
+	}
+	if groupRepository.FindAll() == nil {
+		t.Fatal("could not inject field of GroupRepository")
+	}
+	projectService := injector.Get(new(ProjectService)).(*ProjectService)
+	if projectService == nil {
+		t.Fatal("not found a GroupRepository")
+	}
+	if projectService.FindUser() == nil {
+		t.Fatal("could not inject field of ProjectService")
+	}
+	if projectService.FindGroup() == nil {
+		t.Fatal("could not inject field of ProjectService")
+	}
+}
+
+func Test_it_should_be_inject_instance_directly(t *testing.T) {
+	injector, err := CreateInjector(func(binder Binder) {
+		store := NewStoreOnMemory()
+		userRepository := NewUserRepositoryOnMemory(store)
+		groupRepository := NewGroupRepositoryOnMemory(store)
+		projectService := NewProjectService(userRepository, groupRepository)
+		binder.Bind(new(UserRepository)).ToInstance(userRepository)
+		binder.Bind(new(GroupRepository)).ToInstance(groupRepository).In(SingletonInstance)
+		binder.Bind(new(ProjectService)).ToInstance(projectService).AsEagerSingleton()
 	})
 	if err != nil {
 		t.Fatalf("fatal: %v", err)
