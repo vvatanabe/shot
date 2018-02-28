@@ -1,5 +1,7 @@
 package shot
 
+import "fmt"
+
 type Injector interface {
 	Get(from interface{}) interface{}
 	GetByKey(key Key) interface{}
@@ -25,6 +27,18 @@ func (i *injector) GetByKey(key Key) interface{} {
 		return nil
 	}
 	return binding.get()
+}
+
+func (i *injector) SafeGet(from interface{}) (interface{}, error) {
+	return i.SafeGetByKey(NewKey(from))
+}
+
+func (i *injector) SafeGetByKey(key Key) (interface{}, error) {
+	binding, ok := i.bindings[key]
+	if !ok {
+		return nil, fmt.Errorf("could not find a binding for %s", key.ReflectType().String())
+	}
+	return binding.get(), nil
 }
 
 func (i *injector) set(key Key, binding filledBinding) {
