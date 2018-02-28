@@ -5,6 +5,8 @@ import "fmt"
 type Injector interface {
 	Get(from interface{}) interface{}
 	GetByKey(key Key) interface{}
+	SafeGet(from interface{}) (interface{}, error)
+	SafeGetByKey(key Key) (interface{}, error)
 	set(key Key, binding filledBinding)
 	getBindings() map[Key]filledBinding
 }
