@@ -1,6 +1,6 @@
 # shot [![Build Status](https://travis-ci.org/vvatanabe/shot.svg?branch=master)](https://travis-ci.org/vvatanabe/shot)
 
-This library is a reflection based tiny DI container. It was inspired by the interface of the Google Juice.
+This library is a reflection based tiny DI container. It was inspired by the interface of the Google Guice.
 
 ## Requires
 
