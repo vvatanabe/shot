@@ -90,7 +90,7 @@ func (binding *eagerSingletonBinding) get() interface{} {
 }
 
 type binding interface {
-	fill(injector Injector) filledBinding
+	fill(injector Injector, tagOnly bool) filledBinding
 	getScope() Scope
 	withScope(scope Scope) binding
 	getKey() Key
@@ -108,9 +108,9 @@ type untargettedBinding struct {
 	scope Scope
 }
 
-func (binding *untargettedBinding) fill(injector Injector) filledBinding {
+func (binding *untargettedBinding) fill(injector Injector, tagOnly bool) filledBinding {
 	return resolveBindingScope(binding.scope, func() (interface{}, error) {
-		return buildByStructure(injector, binding.key.Interface())
+		return buildByStructure(injector, binding.key.Interface(), tagOnly)
 	})
 }
 
@@ -141,9 +141,9 @@ type linkedBinding struct {
 	implementation interface{}
 }
 
-func (binding *linkedBinding) fill(injector Injector) filledBinding {
+func (binding *linkedBinding) fill(injector Injector, tagOnly bool) filledBinding {
 	return resolveBindingScope(binding.scope, func() (interface{}, error) {
-		return buildByStructure(injector, binding.implementation)
+		return buildByStructure(injector, binding.implementation, tagOnly)
 	})
 }
 
@@ -187,7 +187,7 @@ func (binding *constructorBinding) getKey() Key {
 	return binding.key
 }
 
-func (binding *constructorBinding) fill(injector Injector) filledBinding {
+func (binding *constructorBinding) fill(injector Injector, tagOnly bool) filledBinding {
 	return resolveBindingScope(binding.scope, func() (interface{}, error) {
 		return buildByConstructor(injector, binding.constructor)
 	})
@@ -220,7 +220,7 @@ func (binding *instanceBinding) getKey() Key {
 	return binding.key
 }
 
-func (binding *instanceBinding) fill(injector Injector) filledBinding {
+func (binding *instanceBinding) fill(injector Injector, tagOnly bool) filledBinding {
 	return resolveBindingScope(binding.scope, func() (interface{}, error) {
 		return binding.instance, nil
 	})
@@ -237,7 +237,7 @@ func resolveBindingScope(scope Scope, initialize initialize) filledBinding {
 	}
 }
 
-func buildByStructure(injector Injector, structure interface{}) (interface{}, error) {
+func buildByStructure(injector Injector, structure interface{}, tagOnly bool) (interface{}, error) {
 	structureType := reflect.TypeOf(structure)
 
 	if structureType == nil {
@@ -254,15 +254,17 @@ func buildByStructure(injector Injector, structure interface{}) (interface{}, er
 
 	structureValue := reflect.Indirect(reflect.New(structureType))
 
-	return fillStructure(injector, structureValue)
+	return fillStructure(injector, structureValue, tagOnly)
 }
 
-func fillStructure(injector Injector, structureValue reflect.Value) (interface{}, error) {
+func fillStructure(injector Injector, structureValue reflect.Value, tagOnly bool) (interface{}, error) {
 	for i := 0; i < structureValue.Type().NumField(); i++ {
 		structField := structureValue.Type().Field(i)
-		_, ok := structField.Tag.Lookup("inject")
-		if !ok {
-			continue
+		if tagOnly {
+			_, ok := structField.Tag.Lookup("inject")
+			if !ok {
+				continue
+			}
 		}
 		structValueField := structureValue.Field(i)
 		if !structValueField.CanSet() {
