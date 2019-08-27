@@ -2,22 +2,30 @@ package shot
 
 type Configure func(binder Binder)
 
-func CreateInjector(configures ...Configure) (Injector, error) {
-	return newInternalInjectorCreator().
+func CreateInjectorIgnoreTag(configures ...Configure) (Injector, error) {
+	return newInternalInjectorCreator(false).
 		addConfigures(configures...).
 		build()
 }
 
-func newInternalInjectorCreator() *internalInjectorCreator {
+func CreateInjector(configures ...Configure) (Injector, error) {
+	return newInternalInjectorCreator(true).
+		addConfigures(configures...).
+		build()
+}
+
+func newInternalInjectorCreator(tagOnly bool) *internalInjectorCreator {
 	return &internalInjectorCreator{
 		binder:     newBinder(),
 		configures: []Configure{},
+		tagOnly:    tagOnly,
 	}
 }
 
 type internalInjectorCreator struct {
 	binder     Binder
 	configures []Configure
+	tagOnly    bool
 }
 
 func (creator *internalInjectorCreator) addConfigures(configures ...Configure) *internalInjectorCreator {
@@ -34,7 +42,7 @@ func (creator *internalInjectorCreator) build() (Injector, error) {
 	injector := newInjector()
 
 	for _, binding := range creator.binder.getBindingAll() {
-		injectedBinding := binding.fill(injector)
+		injectedBinding := binding.fill(injector, creator.tagOnly)
 		injector.set(binding.getKey(), injectedBinding)
 	}
 
